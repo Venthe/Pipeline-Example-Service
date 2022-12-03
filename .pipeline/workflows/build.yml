@@ -17,21 +17,25 @@ jobs:
           version: '7.4.2'
       - uses: actions/setup-docker@v1
         name: Install docker
-      - run: gradle bootJar --no-daemon --console=plain
+      - run: gradle bootJar --no-daemon --console=plain -Porg.gradle.welcome=never
       - run: docker build . --tag venthe/example:latest
+      - uses: actions/docker-login@v1
+        with:
+          username: venthe
+          password: ${env.DOCKER_PASSWORD}
       - run: docker push venthe/example:latest
       - uses: actions/upload-artifact@v1
         with:
           path: build/libs/local_cluster_example-0.0.1-SNAPSHOT.jar
       - uses: actions/setup-kubectl@v1
       - run: |
-          cat <<EOF >/etc/kubernetes/manifests/static-web.yaml
+          cat <<EOF | kubectl apply -f -
           apiVersion: v1
           kind: Pod
           metadata:
             name: static-web
             labels:
-              role: myrole
+              role: myrole2
           spec:
             containers:
               - name: web
